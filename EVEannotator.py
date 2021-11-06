@@ -26,7 +26,7 @@ def main(argv):
         elif opt in ['-t', '--threads']:
             threads = arg
     
-    # 调用其他函数
+    # call other function
     blastx_result = blastx(genome, nr_db)
     blastx_seq = cluster_seq(blastx_result)
     blastp_tbl = blastp(blastx_seq, nr_db)
@@ -44,7 +44,6 @@ def blastx(genome_file, nr_db):
 
     return blastx_result
 
-# 考虑这一部分基于bedtools cluster，分别整理fasta文件以及bed文件，对bed文件进行处理，随后基于去除重复后的序列，从fasta文件中提取对应的序列并进行blastp
         
 def cluster_seq(blastx_result):
     ori_fa = blastx_result + '.fa'
@@ -69,12 +68,12 @@ def cluster_seq(blastx_result):
         f3.write(bed_line)
 
 
-    # 使用bedtools处理整理好的bed文件
+    # bedtools cluster
     new_bed = ori_bed[:-4] + '.grouped.bed'
     bedtools_command = 'bedtools cluster -s -i ' + ori_bed + ' > ' + new_bed
     os.system(bedtools_command)
 
-    # 根据分组信息提取其中最长的序列数据
+    # extract the longest sequence in classified groups
     with open(new_bed) as f4:
         bed_lines = f4.readlines()
     
@@ -100,7 +99,7 @@ def cluster_seq(blastx_result):
 
         n += 1
     
-    # 根据bedtools中的名字从fa文件中提取序列
+    # extract specified sequences from '.fa' according to names
     clustered_bed = ori_bed[:-4] + '.clustered.bed'
 
     with open('temp.bed', 'w') as f5:
