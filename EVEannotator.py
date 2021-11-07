@@ -8,7 +8,7 @@ help_info = ''
 
 def main(argv):
     try:
-        opts,args = getopt.getopt(sys.argv[1:], '-h-v-i:-o:-d:-t', ['help','version','genome =','outdir =','database =','threads ='])
+        opts,args = getopt.getopt(sys.argv[1:], '-v-i:-o:-d:-t:-s:-te:', ['version','genome =','outdir =','database =','threads =','sensitivity =','taxon-exclude'])
     except:
         print("Error")
     
@@ -25,23 +25,26 @@ def main(argv):
             nr_db = arg
         elif opt in ['-t', '--threads']:
             threads = arg
+        elif opt in ['-s', '--sensitivity']:
+            sensitivity = arg
+        elif opt in ['-te', '--taxon-exclude']:
+            taxon_exclude = arg
+
     
     # call other function
-    blastx_result = blastx(genome, nr_db)
+    blastx_result = blastx(genome, nr_db, threads, sensitivity)
     blastx_seq = cluster_seq(blastx_result)
-    blastp_tbl = blastp(blastx_seq, nr_db)
+    blastp_tbl = blastp(blastx_seq, nr_db, threads, taxon_exclude)
     getEVE(blastp_tbl)
+    move(genome, result_path)
         
-def blastx(genome_file, nr_db):
+def blastx(genome_file, nr_db, threads, sensitivity):
 
-    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --evalue 0.1 -k0 -b8 -c1 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
+    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --{sensitivity} --threads {threads} --evalue 0.1 -k0 -b8 -c1 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
     blastx_result = genome_file + '.blastx.tbl'
-    blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result)
+    blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result, threads = threads, sensitivity = sensitivity)
 
     os.system(blast_command)
-
-    print(blast_command)
-
     return blastx_result
 
         
@@ -118,13 +121,12 @@ def cluster_seq(blastx_result):
 
     return clustered_fa
 
-def blastp(blastx_seq, nr_db):
+def blastp(blastx_seq, nr_db, threads, taxon_exclude):
     blastp_result = blastx_seq[:-3] + '.blastp.tbl'
     query = blastx_seq
     nr = nr_db
-    exclude_taxon = '36668'
-    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 -b8 -c1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms skingdoms sphylums stitle qseq"
-    os.system(blastp.format(query = query, blastp_result = blastp_result, nr = nr, exclude_taxon = exclude_taxon))
+    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --threads {threads} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 -b8 -c1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms skingdoms sphylums stitle qseq"
+    os.system(blastp.format(query = query, blastp_result = blastp_result, nr = nr, threads = threads, exclude_taxon = taxon_exclude))
 
     return blastp_result
 
@@ -133,6 +135,9 @@ def getEVE(blastp_tbl):
 
     grep = 'grep -i "Viruses" {blastp_result} > {blastp_result_virus}'
     os.system(grep.format(blastp_result = blastp_tbl, blastp_result_virus = blastp_result_virus))
+
+def move(genome, result_path):
+    mv = 'mv ' + genome + '* ' + result_path
 
 if __name__ == "__main__":
     main(sys.argv[1:])
