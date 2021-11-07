@@ -40,9 +40,10 @@ def main(argv):
         
 def blastx(genome_file, nr_db, threads, sensitivity, result_path):
 
-    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --{sensitivity} --threads {threads} --evalue 0.1 -k0 -b8 -c1 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
-    blastx_result = result_path + genome_file + '.blastx.tbl'
-    blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result, threads = threads, sensitivity = sensitivity)
+    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --{sensitivity} --threads {thread} --evalue 0.1 -k0 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
+    genome_file_name = genome_file.split('/')[-1]
+    blastx_result = result_path + genome_file_name + '.blastx.tbl'
+    blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result, thread = threads, sensitivity = sensitivity)
 
     os.system(blast_command)
     return blastx_result
@@ -125,7 +126,7 @@ def blastp(blastx_seq, nr_db, threads, taxon_exclude):
     blastp_result = blastx_seq[:-3] + '.blastp.tbl'
     query = blastx_seq
     nr = nr_db
-    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --threads {threads} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 -b8 -c1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms skingdoms sphylums stitle qseq"
+    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --threads {threads} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms skingdoms sphylums stitle qseq"
     os.system(blastp.format(query = query, blastp_result = blastp_result, nr = nr, threads = threads, exclude_taxon = taxon_exclude))
 
     return blastp_result
