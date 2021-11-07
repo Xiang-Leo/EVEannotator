@@ -8,7 +8,7 @@ help_info = ''
 
 def main(argv):
     try:
-        opts,args = getopt.getopt(sys.argv[1:], '-v-i:-o:-d:-t:-s:-te:', ['version','genome =','outdir =','database =','threads =','sensitivity =','taxon-exclude'])
+        opts,args = getopt.getopt(sys.argv[1:], '-v-i:-o:-d:-t:-s:-e:', ['version','genome =','outdir =','database =','threads =','sensitivity =','taxon-exclude'])
     except:
         print("Error")
     
@@ -27,21 +27,21 @@ def main(argv):
             threads = arg
         elif opt in ['-s', '--sensitivity']:
             sensitivity = arg
-        elif opt in ['-te', '--taxon-exclude']:
+        elif opt in ['-e', '--taxon-exclude']:
             taxon_exclude = arg
 
     
     # call other function
-    blastx_result = blastx(genome, nr_db, threads, sensitivity)
+    blastx_result = blastx(genome, nr_db, threads, sensitivity, result_path)
     blastx_seq = cluster_seq(blastx_result)
-    blastp_tbl = blastp(blastx_seq, nr_db, threads, taxon_exclude)
+    blastp_tbl = blastp(blastx_seq, nr_db, threads, taxon_exclude, result_path)
     getEVE(blastp_tbl)
     move(genome, result_path)
         
-def blastx(genome_file, nr_db, threads, sensitivity):
+def blastx(genome_file, nr_db, threads, sensitivity, result_path):
 
     blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --{sensitivity} --threads {threads} --evalue 0.1 -k0 -b8 -c1 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
-    blastx_result = genome_file + '.blastx.tbl'
+    blastx_result = result_path + genome_file + '.blastx.tbl'
     blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result, threads = threads, sensitivity = sensitivity)
 
     os.system(blast_command)
@@ -138,6 +138,7 @@ def getEVE(blastp_tbl):
 
 def move(genome, result_path):
     mv = 'mv ' + genome + '* ' + result_path
+    os.system(mv)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
