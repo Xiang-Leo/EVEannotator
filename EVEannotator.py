@@ -8,7 +8,7 @@ help_info = ''
 
 def main(argv):
     try:
-        opts,args = getopt.getopt(sys.argv[1:], '-v-i:-o:-d:-t:-s:-e:', ['version','genome =','outdir =','database =','threads =','sensitivity =','taxon-exclude'])
+        opts,args = getopt.getopt(sys.argv[1:], '-h-v-i:-o:-d:-t:-s:-e:', ['help', 'version','genome =','outdir =','database =','threads =','sensitivity =','taxon-exclude'])
     except:
         print("Error")
     
@@ -34,9 +34,9 @@ def main(argv):
     # call other function
     blastx_result = blastx(genome, nr_db, threads, sensitivity, result_path)
     blastx_seq = cluster_seq(blastx_result)
-    blastp_tbl = blastp(blastx_seq, nr_db, threads, taxon_exclude, result_path)
-    getEVE(blastp_tbl)
-    move(genome, result_path)
+    blastp_tbl = blastp(blastx_seq, nr_db, threads, taxon_exclude)
+    blastp_result_virus = getEVE(blastp_tbl)
+    taxonkit(blastp_result_virus)
         
 def blastx(genome_file, nr_db, threads, sensitivity, result_path):
 
@@ -126,7 +126,7 @@ def blastp(blastx_seq, nr_db, threads, taxon_exclude):
     blastp_result = blastx_seq[:-3] + '.blastp.tbl'
     query = blastx_seq
     nr = nr_db
-    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --threads {threads} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms skingdoms sphylums stitle qseq"
+    blastp = "diamond blastp --db {nr} --query {query} --out {blastp_result} --threads {threads} --taxon-exclude {exclude_taxon} --evalue 0.00001 -k 1 --outfmt 6 qseqid sseqid pident length evalue staxids sscinames sskingdoms stitle qseq"
     os.system(blastp.format(query = query, blastp_result = blastp_result, nr = nr, threads = threads, exclude_taxon = taxon_exclude))
 
     return blastp_result
@@ -137,9 +137,16 @@ def getEVE(blastp_tbl):
     grep = 'grep -i "Viruses" {blastp_result} > {blastp_result_virus}'
     os.system(grep.format(blastp_result = blastp_tbl, blastp_result_virus = blastp_result_virus))
 
-def move(genome, result_path):
-    mv = 'mv ' + genome + '* ' + result_path
-    os.system(mv)
+    return(blastp_result_virus)
+
+def taxonkit(blastp_result_virus):
+    new_blastp_result_virus = blastp_result_virus[:-4] + '.classified.tbl'
+    taxonkit_cmd = "awk '{print $6}' " + blastp_result_virus + " | awk -F ';' '{print $1}' | taxonkit lineage | taxonkit reformat -f '{f}' >temp.txt"
+    merge = "csvtk join -t -T -f '6;1' --keep-unmatched " + blastp_result_virus + " temp.txt | uniq >" + new_blastp_result_virus
+
+    os.system(taxonkit_cmd)
+    os.system(merge)
+    os.system('rm temp.txt')
 
 if __name__ == "__main__":
     main(sys.argv[1:])
