@@ -40,7 +40,7 @@ def main(argv):
         
 def blastx(genome_file, nr_db, threads, sensitivity, result_path):
 
-    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --{sensitivity} --threads {thread} --evalue 0.1 -k0 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
+    blastx = 'diamond blastx --db {nr} --query {genome} --out {blastx_result} --taxonlist 10239 --taxon-exclude 186665,11632,186670 --{sensitivity} --threads {thread} --evalue 0.1 -k0 --outfmt 6 qseqid sseqid pident length qstart qend sstart send evalue qseq_translated staxids sscinames sskingdoms skingdoms sphylums stitle'
     genome_file_name = genome_file.split('/')[-1]
     blastx_result = result_path + genome_file_name + '.blastx.tbl'
     blast_command = blastx.format(genome = genome_file, nr = nr_db, blastx_result = blastx_result, thread = threads, sensitivity = sensitivity)
