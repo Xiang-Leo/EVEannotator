@@ -7,7 +7,7 @@ wget -c https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz
 wget -c https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz.md5
 # Taxnomy
 wget -c https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.gz
-wget -c https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/
+wget -c https://ftp.ncbi.nih.gov/pub/taxonomy/taxdmp.zip
 unzip taxdmp.zip
 
 # Check file integrity 
